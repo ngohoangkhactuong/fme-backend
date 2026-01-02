@@ -43,6 +43,7 @@ public class DutyReportServiceImpl implements DutyReportService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DutyReportDTO getById(Long id) {
         DutyReport dutyReport = dutyReportRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("DutyReport", "id", id));
@@ -50,24 +51,28 @@ public class DutyReportServiceImpl implements DutyReportService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DutyReportDTO> getAll() {
         List<DutyReport> reports = dutyReportRepository.findAll();
         return dutyReportMapper.toDTOList(reports);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DutyReportDTO> getByStudentEmail(String email) {
         List<DutyReport> reports = dutyReportRepository.findByStudentEmailOrderBySubmittedAtDesc(email);
         return dutyReportMapper.toDTOList(reports);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DutyReportDTO> getByScheduleId(Long scheduleId) {
         List<DutyReport> reports = dutyReportRepository.findByScheduleIdOrderBySubmittedAtDesc(scheduleId);
         return dutyReportMapper.toDTOList(reports);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DutyReportDTO> getByFilters(String studentEmail, LocalDate fromDate, LocalDate toDate) {
         List<DutyReport> reports = dutyReportRepository.findByFilters(studentEmail, fromDate, toDate);
         return dutyReportMapper.toDTOList(reports);

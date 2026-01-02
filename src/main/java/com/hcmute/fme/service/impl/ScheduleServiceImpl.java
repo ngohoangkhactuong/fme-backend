@@ -32,6 +32,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ScheduleDTO getById(Long id) {
         Schedule schedule = scheduleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Schedule", "id", id));
@@ -39,24 +40,28 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ScheduleDTO> getAll() {
         List<Schedule> schedules = scheduleRepository.findAll();
         return scheduleMapper.toDTOList(schedules);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ScheduleDTO> getByDate(LocalDate date) {
         List<Schedule> schedules = scheduleRepository.findByDateOrderByShiftAsc(date);
         return scheduleMapper.toDTOList(schedules);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ScheduleDTO> getByDateRange(LocalDate startDate, LocalDate endDate) {
         List<Schedule> schedules = scheduleRepository.findByDateBetweenOrderByDateAscShiftAsc(startDate, endDate);
         return scheduleMapper.toDTOList(schedules);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ScheduleDTO> getByStudentEmail(String email) {
         List<Schedule> schedules = scheduleRepository.findByStudentEmailOrderByDateDesc(email);
         return scheduleMapper.toDTOList(schedules);

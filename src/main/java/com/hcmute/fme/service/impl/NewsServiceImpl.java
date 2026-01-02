@@ -32,6 +32,7 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public NewsDTO getById(Long id) {
         News news = newsRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("News", "id", id));
@@ -39,18 +40,21 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<NewsDTO> getAll() {
         List<News> newsList = newsRepository.findAllByOrderByPublishedDateDesc();
         return newsMapper.toDTOList(newsList);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<NewsDTO> getByCategory(String category) {
         List<News> newsList = newsRepository.findByCategoryOrderByPublishedDateDesc(category);
         return newsMapper.toDTOList(newsList);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<NewsDTO> getTrending() {
         List<News> newsList = newsRepository.findByIsTrendingTrueOrderByPublishedDateDesc();
         return newsMapper.toDTOList(newsList);

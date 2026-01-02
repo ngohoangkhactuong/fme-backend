@@ -35,6 +35,7 @@ public class ProgramServiceImpl implements ProgramService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProgramDTO getById(Long id) {
         Program program = programRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Program", "id", id));
@@ -42,6 +43,7 @@ public class ProgramServiceImpl implements ProgramService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProgramDTO getByCode(String code) {
         Program program = programRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Program", "code", code));
@@ -49,12 +51,14 @@ public class ProgramServiceImpl implements ProgramService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProgramDTO> getAll() {
         List<Program> programs = programRepository.findByIsActiveTrueOrderByTypeAscNameAsc();
         return programMapper.toDTOList(programs);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProgramDTO> getByType(Program.ProgramType type) {
         List<Program> programs = programRepository.findByTypeAndIsActiveTrueOrderByNameAsc(type);
         return programMapper.toDTOList(programs);

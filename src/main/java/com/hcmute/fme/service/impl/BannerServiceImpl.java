@@ -35,6 +35,7 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BannerDTO getById(Long id) {
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Banner", "id", id));
@@ -42,12 +43,14 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BannerDTO> getAll() {
         List<Banner> banners = bannerRepository.findAllByOrderByDisplayOrderAsc();
         return bannerMapper.toDTOList(banners);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BannerDTO> getActive() {
         List<Banner> banners = bannerRepository.findByIsActiveTrueOrderByDisplayOrderAsc();
         return bannerMapper.toDTOList(banners);

@@ -4,6 +4,7 @@ build/
 **/build/
 !gradle/wrapper/gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper-shared-8.5.jar
+bin/
 
 # IDE
 *.iml

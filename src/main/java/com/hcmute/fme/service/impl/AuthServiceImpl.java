@@ -10,6 +10,7 @@ import com.hcmute.fme.entity.User;
 import com.hcmute.fme.exception.DuplicateResourceException;
 import com.hcmute.fme.exception.ResourceNotFoundException;
 import com.hcmute.fme.exception.UnauthorizedException;
+import com.hcmute.fme.mapper.UserMapper;
 import com.hcmute.fme.repository.UserRepository;
 import com.hcmute.fme.security.JwtTokenProvider;
 import com.hcmute.fme.service.AuthService;
@@ -20,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final UserMapper userMapper;
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^(\\d+)@student\\.hcmute\\.edu\\.vn$", Pattern.CASE_INSENSITIVE);
     private static final String ADMIN_STUDENT_ID = "23146053";
@@ -39,39 +42,22 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse signUp(SignUpRequest request) {
-        // Validate email format
-        Matcher matcher = EMAIL_PATTERN.matcher(request.getEmail());
-        if (!matcher.matches()) {
-            throw new UnauthorizedException("Email must be in format: studentId@student.hcmute.edu.vn");
-        }
+        String studentId = extractStudentId(request.getEmail());
+        ensureEmailIsAvailable(request.getEmail());
 
-        String studentId = matcher.group(1);
-
-        // Check if email already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("User", "email", request.getEmail());
-        }
-
-        // Determine role based on student ID
-        User.Role role = ADMIN_STUDENT_ID.equals(studentId) ? User.Role.ADMIN : User.Role.USER;
-
-        // Create new user
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .studentId(studentId)
-                .role(role)
+                .role(resolveRole(studentId))
                 .isActive(true)
                 .build();
 
         user = userRepository.save(user);
+        TokenPair tokenPair = issueTokens(user.getEmail());
 
-        // Generate tokens
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getEmail());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
-
-        return buildAuthResponse(user, accessToken, refreshToken);
+        return buildAuthResponse(user, tokenPair);
     }
 
     @Override
@@ -80,13 +66,13 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.getEmail()));
+        User user = findUserByEmail(request.getEmail());
+        TokenPair tokenPair = new TokenPair(
+                jwtTokenProvider.generateAccessToken(authentication),
+                jwtTokenProvider.generateRefreshToken(user.getEmail())
+        );
 
-        String accessToken = jwtTokenProvider.generateAccessToken(authentication);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail());
-
-        return buildAuthResponse(user, accessToken, refreshToken);
+        return buildAuthResponse(user, tokenPair);
     }
 
     @Override
@@ -96,45 +82,36 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String email = jwtTokenProvider.getEmailFromToken(refreshToken);
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        User user = findUserByEmail(email);
+        TokenPair tokenPair = issueTokens(email);
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(email);
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
-
-        return buildAuthResponse(user, newAccessToken, newRefreshToken);
+        return buildAuthResponse(user, tokenPair);
     }
 
     @Override
     public UserDTO getCurrentUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-
-        return toUserDTO(user);
+        return userMapper.toDTO(findUserByEmail(email));
     }
 
     @Override
     @Transactional
     public UserDTO updateProfile(String email, UpdateProfileRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        User user = findUserByEmail(email);
 
-        if (request.getName() != null && !request.getName().isBlank()) {
+        if (StringUtils.hasText(request.getName())) {
             user.setName(request.getName());
         }
         if (request.getAvatar() != null) {
             user.setAvatar(request.getAvatar());
         }
 
-        user = userRepository.save(user);
-        return toUserDTO(user);
+        return userMapper.toDTO(userRepository.save(user));
     }
 
     @Override
     @Transactional
     public void changePassword(String email, ChangePasswordRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        User user = findUserByEmail(email);
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new UnauthorizedException("Current password is incorrect");
@@ -144,10 +121,10 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
     }
 
-    private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken) {
+    private AuthResponse buildAuthResponse(User user, TokenPair tokenPair) {
         return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .accessToken(tokenPair.accessToken())
+                .refreshToken(tokenPair.refreshToken())
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getJwtExpiration())
                 .user(AuthResponse.UserResponse.builder()
@@ -161,15 +138,36 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    private UserDTO toUserDTO(User user) {
-        return UserDTO.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .studentId(user.getStudentId())
-                .avatar(user.getAvatar())
-                .role(user.getRole().name().toLowerCase())
-                .isActive(user.getIsActive())
-                .build();
+    private String extractStudentId(String email) {
+        Matcher matcher = EMAIL_PATTERN.matcher(email);
+        if (!matcher.matches()) {
+            throw new UnauthorizedException("Email must be in format: studentId@student.hcmute.edu.vn");
+        }
+        return matcher.group(1);
+    }
+
+    private void ensureEmailIsAvailable(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateResourceException("User", "email", email);
+        }
+    }
+
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+    }
+
+    private TokenPair issueTokens(String email) {
+        return new TokenPair(
+                jwtTokenProvider.generateAccessToken(email),
+                jwtTokenProvider.generateRefreshToken(email)
+        );
+    }
+
+    private User.Role resolveRole(String studentId) {
+        return ADMIN_STUDENT_ID.equals(studentId) ? User.Role.ADMIN : User.Role.USER;
+    }
+
+    private record TokenPair(String accessToken, String refreshToken) {
     }
 }

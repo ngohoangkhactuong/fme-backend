@@ -20,12 +20,14 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDTO> getAll() {
         List<User> users = userRepository.findAll();
         return userMapper.toDTOList(users);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDTO getById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
@@ -33,6 +35,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDTO getByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
