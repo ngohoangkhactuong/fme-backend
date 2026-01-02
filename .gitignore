@@ -1,0 +1,19 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper-shared-8.5.jar
+
+# IDE
+*.iml
+.idea/
+*.ipr
+*.iws
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
