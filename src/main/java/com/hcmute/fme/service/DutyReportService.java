@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface DutyReportService {
 
-    DutyReportDTO create(DutyReportRequest request);
+    DutyReportDTO createForStudent(DutyReportRequest request, String studentEmail);
 
     DutyReportDTO getById(Long id);
 

@@ -55,7 +55,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/banners/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/news/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/programs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
+
+                        // Authenticated read endpoints
+                        .requestMatchers(HttpMethod.GET, "/schedules/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/reports/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/reports").authenticated()
                         
                         // Admin only endpoints
                         .requestMatchers(HttpMethod.POST, "/banners/**").hasRole("ADMIN")
@@ -67,9 +71,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/programs/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/programs/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/programs/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/schedules/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/schedules/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/schedules/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/schedules/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/reports/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/reports/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/reports/**").hasRole("ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         
                         // Authenticated endpoints

@@ -5,6 +5,7 @@ import com.hcmute.fme.dto.response.DutyReportDTO;
 import com.hcmute.fme.entity.DutyReport;
 import com.hcmute.fme.entity.Schedule;
 import com.hcmute.fme.exception.ResourceNotFoundException;
+import com.hcmute.fme.exception.UnauthorizedException;
 import com.hcmute.fme.mapper.DutyReportMapper;
 import com.hcmute.fme.repository.DutyReportRepository;
 import com.hcmute.fme.repository.ScheduleRepository;
@@ -27,16 +28,22 @@ public class DutyReportServiceImpl implements DutyReportService {
 
     @Override
     @Transactional
-    public DutyReportDTO create(DutyReportRequest request) {
+    public DutyReportDTO createForStudent(DutyReportRequest request, String studentEmail) {
+        Schedule schedule = scheduleRepository.findById(request.getScheduleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule", "id", request.getScheduleId()));
+
+        if (!schedule.getStudentEmail().equalsIgnoreCase(studentEmail)) {
+            throw new UnauthorizedException("You can only submit reports for your own schedule");
+        }
+
         DutyReport dutyReport = dutyReportMapper.toEntity(request);
+        dutyReport.setSchedule(schedule);
+        dutyReport.setStudentEmail(schedule.getStudentEmail());
+        dutyReport.setStudentName(schedule.getStudentName());
+        dutyReport.setDate(schedule.getDate());
+        dutyReport.setShift(schedule.getShift());
         dutyReport.setSubmittedAt(LocalDateTime.now());
         dutyReport.setStatus(DutyReport.ReportStatus.PENDING);
-
-        if (request.getScheduleId() != null) {
-            Schedule schedule = scheduleRepository.findById(request.getScheduleId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Schedule", "id", request.getScheduleId()));
-            dutyReport.setSchedule(schedule);
-        }
 
         dutyReport = dutyReportRepository.save(dutyReport);
         return dutyReportMapper.toDTO(dutyReport);

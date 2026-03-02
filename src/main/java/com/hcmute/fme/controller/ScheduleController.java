@@ -72,6 +72,14 @@ public class ScheduleController {
         return ResponseEntity.ok(ApiResponse.success(schedules));
     }
 
+    @GetMapping("/me")
+    @Operation(summary = "Get schedules for current student")
+    public ResponseEntity<ApiResponse<List<ScheduleDTO>>> getMySchedules(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        List<ScheduleDTO> schedules = scheduleService.getByStudentEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(schedules));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Update schedule (Admin only)")
     public ResponseEntity<ApiResponse<ScheduleDTO>> update(

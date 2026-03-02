@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -27,8 +29,10 @@ public class DutyReportController {
 
     @PostMapping
     @Operation(summary = "Create a new duty report")
-    public ResponseEntity<ApiResponse<DutyReportDTO>> create(@Valid @RequestBody DutyReportRequest request) {
-        DutyReportDTO report = dutyReportService.create(request);
+    public ResponseEntity<ApiResponse<DutyReportDTO>> create(
+            @Valid @RequestBody DutyReportRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        DutyReportDTO report = dutyReportService.createForStudent(request, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Report created successfully", report));
     }
@@ -51,6 +55,14 @@ public class DutyReportController {
     @Operation(summary = "Get reports by student email")
     public ResponseEntity<ApiResponse<List<DutyReportDTO>>> getByStudentEmail(@PathVariable String email) {
         List<DutyReportDTO> reports = dutyReportService.getByStudentEmail(email);
+        return ResponseEntity.ok(ApiResponse.success(reports));
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get reports for current student")
+    public ResponseEntity<ApiResponse<List<DutyReportDTO>>> getMyReports(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        List<DutyReportDTO> reports = dutyReportService.getByStudentEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(reports));
     }
 

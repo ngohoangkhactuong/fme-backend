@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -16,19 +15,8 @@ import java.util.List;
 @AllArgsConstructor
 public class DutyReportRequest {
 
+    @NotNull(message = "Schedule is required")
     private Long scheduleId;
-
-    @NotBlank(message = "Student name is required")
-    private String studentName;
-
-    @NotBlank(message = "Student email is required")
-    private String studentEmail;
-
-    @NotNull(message = "Date is required")
-    private LocalDate date;
-
-    @NotBlank(message = "Shift is required")
-    private String shift;
 
     @NotBlank(message = "Report content is required")
     private String report;
