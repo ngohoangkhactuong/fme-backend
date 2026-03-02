@@ -1,5 +1,6 @@
 package com.hcmute.fme.controller;
 
+import com.hcmute.fme.dto.request.DutyReportDraftRequest;
 import com.hcmute.fme.dto.request.DutyReportRequest;
 import com.hcmute.fme.dto.response.ApiResponse;
 import com.hcmute.fme.dto.response.DutyReportDTO;
@@ -35,6 +36,24 @@ public class DutyReportController {
         DutyReportDTO report = dutyReportService.createForStudent(request, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Report created successfully", report));
+    }
+
+    @PostMapping("/draft")
+    @Operation(summary = "Save duty report draft for current student")
+    public ResponseEntity<ApiResponse<DutyReportDTO>> saveDraft(
+            @Valid @RequestBody DutyReportDraftRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        DutyReportDTO report = dutyReportService.saveDraftForStudent(request, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Draft saved successfully", report));
+    }
+
+    @GetMapping("/draft/{scheduleId}")
+    @Operation(summary = "Get duty report draft for current student")
+    public ResponseEntity<ApiResponse<DutyReportDTO>> getDraft(
+            @PathVariable Long scheduleId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        DutyReportDTO report = dutyReportService.getDraftForStudent(scheduleId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(report));
     }
 
     @GetMapping

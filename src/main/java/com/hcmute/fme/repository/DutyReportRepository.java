@@ -19,6 +19,12 @@ public interface DutyReportRepository extends JpaRepository<DutyReport, Long> {
         Optional<DutyReport> findByIdAndStudentEmail(Long id, String studentEmail);
     
     List<DutyReport> findByScheduleIdOrderBySubmittedAtDesc(Long scheduleId);
+
+        Optional<DutyReport> findByScheduleIdAndStudentEmailAndStatus(
+            Long scheduleId,
+            String studentEmail,
+            DutyReport.ReportStatus status
+        );
     
     @Query("SELECT d FROM DutyReport d WHERE d.submittedAt BETWEEN :from AND :to ORDER BY d.submittedAt DESC")
     List<DutyReport> findByDateRange(

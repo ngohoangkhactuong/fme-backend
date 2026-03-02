@@ -1,6 +1,7 @@
 package com.hcmute.fme.service;
 
 import com.hcmute.fme.dto.request.DutyReportRequest;
+import com.hcmute.fme.dto.request.DutyReportDraftRequest;
 import com.hcmute.fme.dto.response.DutyReportDTO;
 import com.hcmute.fme.entity.DutyReport;
 
@@ -10,6 +11,10 @@ import java.util.List;
 public interface DutyReportService {
 
     DutyReportDTO createForStudent(DutyReportRequest request, String studentEmail);
+
+    DutyReportDTO saveDraftForStudent(DutyReportDraftRequest request, String studentEmail);
+
+    DutyReportDTO getDraftForStudent(Long scheduleId, String studentEmail);
 
     DutyReportDTO getByIdForStudent(Long id, String studentEmail);
 

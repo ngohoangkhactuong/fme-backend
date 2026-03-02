@@ -1,5 +1,6 @@
 package com.hcmute.fme.service.impl;
 
+import com.hcmute.fme.dto.request.DutyReportDraftRequest;
 import com.hcmute.fme.dto.request.DutyReportRequest;
 import com.hcmute.fme.dto.response.DutyReportDTO;
 import com.hcmute.fme.entity.DutyReport;
@@ -36,18 +37,80 @@ public class DutyReportServiceImpl implements DutyReportService {
             throw new UnauthorizedException("You can only submit reports for your own schedule");
         }
 
-        DutyReport dutyReport = dutyReportMapper.toEntity(request);
-        dutyReport.setSchedule(schedule);
-        dutyReport.setStudentEmail(schedule.getStudentEmail());
-        dutyReport.setStudentName(schedule.getStudentName());
-        dutyReport.setDate(schedule.getDate());
-        dutyReport.setShift(schedule.getShift());
+        DutyReport dutyReport = dutyReportRepository
+            .findByScheduleIdAndStudentEmailAndStatus(
+                request.getScheduleId(),
+                studentEmail,
+                DutyReport.ReportStatus.DRAFT
+            )
+            .orElseGet(() -> {
+                DutyReport draft = dutyReportMapper.toEntity(request);
+                draft.setSchedule(schedule);
+                draft.setStudentEmail(schedule.getStudentEmail());
+                draft.setStudentName(schedule.getStudentName());
+                draft.setDate(schedule.getDate());
+                draft.setShift(schedule.getShift());
+                return draft;
+            });
+
+        dutyReport.setReport(request.getReport() != null ? request.getReport() : "");
+        dutyReport.setTitle(request.getTitle());
+        dutyReport.setImages(request.getImages());
         dutyReport.setSubmittedAt(LocalDateTime.now());
         dutyReport.setStatus(DutyReport.ReportStatus.PENDING);
 
         dutyReport = dutyReportRepository.save(dutyReport);
         return dutyReportMapper.toDTO(dutyReport);
     }
+
+        @Override
+        @Transactional
+        public DutyReportDTO saveDraftForStudent(DutyReportDraftRequest request, String studentEmail) {
+        Schedule schedule = scheduleRepository.findById(request.getScheduleId())
+            .orElseThrow(() -> new ResourceNotFoundException("Schedule", "id", request.getScheduleId()));
+
+        if (!schedule.getStudentEmail().equalsIgnoreCase(studentEmail)) {
+            throw new UnauthorizedException("You can only save drafts for your own schedule");
+        }
+
+        DutyReport dutyReport = dutyReportRepository
+            .findByScheduleIdAndStudentEmailAndStatus(
+                request.getScheduleId(),
+                studentEmail,
+                DutyReport.ReportStatus.DRAFT
+            )
+            .orElseGet(() -> {
+                DutyReport draft = new DutyReport();
+                draft.setSchedule(schedule);
+                draft.setStudentEmail(schedule.getStudentEmail());
+                draft.setStudentName(schedule.getStudentName());
+                draft.setDate(schedule.getDate());
+                draft.setShift(schedule.getShift());
+                draft.setStatus(DutyReport.ReportStatus.DRAFT);
+                return draft;
+            });
+
+        dutyReport.setTitle(request.getTitle());
+        dutyReport.setReport(request.getReport() != null ? request.getReport() : "");
+        dutyReport.setImages(request.getImages());
+        dutyReport.setSubmittedAt(null);
+
+        dutyReport = dutyReportRepository.save(dutyReport);
+        return dutyReportMapper.toDTO(dutyReport);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public DutyReportDTO getDraftForStudent(Long scheduleId, String studentEmail) {
+        DutyReport dutyReport = dutyReportRepository
+            .findByScheduleIdAndStudentEmailAndStatus(
+                scheduleId,
+                studentEmail,
+                DutyReport.ReportStatus.DRAFT
+            )
+            .orElseThrow(() -> new ResourceNotFoundException("DutyReport", "scheduleId", scheduleId));
+        return dutyReportMapper.toDTO(dutyReport);
+        }
 
     @Override
     @Transactional(readOnly = true)

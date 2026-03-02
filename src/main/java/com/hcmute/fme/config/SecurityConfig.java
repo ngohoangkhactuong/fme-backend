@@ -60,6 +60,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/schedules/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/reports/me/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/reports").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/reports/draft").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/reports/draft/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/schedules/*/confirm").authenticated()
                         
                         // Admin only endpoints

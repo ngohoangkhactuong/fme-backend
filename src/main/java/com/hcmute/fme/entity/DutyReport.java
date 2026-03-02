@@ -53,7 +53,7 @@ public class DutyReport {
     @Builder.Default
     private ReportStatus status = ReportStatus.PENDING;
 
-    @Column(name = "submitted_at", nullable = false)
+    @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
     @ElementCollection
@@ -71,6 +71,6 @@ public class DutyReport {
     private LocalDateTime updatedAt;
 
     public enum ReportStatus {
-        PENDING, APPROVED, REJECTED
+        DRAFT, PENDING, APPROVED, REJECTED
     }
 }
