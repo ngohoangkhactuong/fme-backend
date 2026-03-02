@@ -30,12 +30,26 @@ public class DataInitializer {
             ScheduleRepository scheduleRepository) {
 
         return args -> {
-            // Initialize users if empty
+            // Initialize users if needed
+                            if (!userRepository.existsByEmail("20133112@student.hcmute.edu.vn")
+                                    && !userRepository.existsByStudentId("20133112")) {
+                User admin = User.builder()
+                        .name("Admin System")
+                                        .email("20133112@student.hcmute.edu.vn")
+                                        .password(passwordEncoder.encode("123456"))
+                                        .studentId("20133112")
+                        .role(User.Role.ADMIN)
+                        .isActive(true)
+                        .build();
+                userRepository.save(admin);
+                log.info("Created default admin user");
+            }
+
             if (userRepository.count() == 0) {
                 log.info("Initializing default users...");
 
                 User admin = User.builder()
-                        .name("Admin Sinh viên")
+                        .name("Admin Sinh vien")
                         .email("23146053@student.hcmute.edu.vn")
                         .password(passwordEncoder.encode("admin123"))
                         .studentId("23146053")
@@ -44,7 +58,7 @@ public class DataInitializer {
                         .build();
 
                 User student = User.builder()
-                        .name("Nguyễn Văn A")
+                        .name("Nguyen Van A")
                         .email("20190001@student.hcmute.edu.vn")
                         .password(passwordEncoder.encode("student123"))
                         .studentId("20190001")

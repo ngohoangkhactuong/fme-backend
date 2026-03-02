@@ -33,7 +33,7 @@ public class News {
     @Column(name = "published_date", nullable = false)
     private String publishedDate;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(nullable = false)
