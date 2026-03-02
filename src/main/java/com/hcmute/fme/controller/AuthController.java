@@ -1,6 +1,7 @@
 package com.hcmute.fme.controller;
 
 import com.hcmute.fme.dto.request.ChangePasswordRequest;
+import com.hcmute.fme.dto.request.GoogleSignInRequest;
 import com.hcmute.fme.dto.request.SignInRequest;
 import com.hcmute.fme.dto.request.SignUpRequest;
 import com.hcmute.fme.dto.request.UpdateProfileRequest;
@@ -38,6 +39,14 @@ public class AuthController {
     @Operation(summary = "Sign in with email and password")
     public ResponseEntity<ApiResponse<AuthResponse>> signIn(@Valid @RequestBody SignInRequest request) {
         AuthResponse response = authService.signIn(request);
+        return ResponseEntity.ok(ApiResponse.success("Sign in successful", response));
+    }
+
+    @PostMapping("/google")
+    @Operation(summary = "Sign in with Google ID token")
+    public ResponseEntity<ApiResponse<AuthResponse>> signInWithGoogle(
+            @Valid @RequestBody GoogleSignInRequest request) {
+        AuthResponse response = authService.signInWithGoogle(request);
         return ResponseEntity.ok(ApiResponse.success("Sign in successful", response));
     }
 

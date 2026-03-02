@@ -1,6 +1,7 @@
 package com.hcmute.fme.service;
 
 import com.hcmute.fme.dto.request.ChangePasswordRequest;
+import com.hcmute.fme.dto.request.GoogleSignInRequest;
 import com.hcmute.fme.dto.request.SignInRequest;
 import com.hcmute.fme.dto.request.SignUpRequest;
 import com.hcmute.fme.dto.request.UpdateProfileRequest;
@@ -12,6 +13,8 @@ public interface AuthService {
     AuthResponse signUp(SignUpRequest request);
 
     AuthResponse signIn(SignInRequest request);
+
+    AuthResponse signInWithGoogle(GoogleSignInRequest request);
 
     AuthResponse refreshToken(String refreshToken);
 

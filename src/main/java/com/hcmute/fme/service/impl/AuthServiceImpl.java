@@ -1,6 +1,7 @@
 package com.hcmute.fme.service.impl;
 
 import com.hcmute.fme.dto.request.ChangePasswordRequest;
+import com.hcmute.fme.dto.request.GoogleSignInRequest;
 import com.hcmute.fme.dto.request.SignInRequest;
 import com.hcmute.fme.dto.request.SignUpRequest;
 import com.hcmute.fme.dto.request.UpdateProfileRequest;
@@ -13,6 +14,7 @@ import com.hcmute.fme.exception.UnauthorizedException;
 import com.hcmute.fme.mapper.UserMapper;
 import com.hcmute.fme.repository.UserRepository;
 import com.hcmute.fme.security.JwtTokenProvider;
+import com.hcmute.fme.security.GoogleTokenVerifier;
 import com.hcmute.fme.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
     private final UserMapper userMapper;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^(\\d+)@student\\.hcmute\\.edu\\.vn$", Pattern.CASE_INSENSITIVE);
     private static final String ADMIN_STUDENT_ID = "23146053";
@@ -72,6 +76,42 @@ public class AuthServiceImpl implements AuthService {
                 jwtTokenProvider.generateRefreshToken(user.getEmail())
         );
 
+        return buildAuthResponse(user, tokenPair);
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse signInWithGoogle(GoogleSignInRequest request) {
+        GoogleTokenVerifier.GoogleUserInfo userInfo = googleTokenVerifier.verify(request.getIdToken());
+        String email = userInfo.email();
+        String studentId = extractStudentId(email);
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            user = User.builder()
+                    .name(StringUtils.hasText(userInfo.name()) ? userInfo.name() : email)
+                    .email(email)
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .studentId(studentId)
+                    .role(resolveRole(studentId))
+                    .avatar(userInfo.pictureUrl())
+                    .isActive(true)
+                    .build();
+        } else {
+            if (StringUtils.hasText(userInfo.name())) {
+                user.setName(userInfo.name());
+            }
+            if (StringUtils.hasText(userInfo.pictureUrl())) {
+                user.setAvatar(userInfo.pictureUrl());
+            }
+        }
+
+        if (Boolean.FALSE.equals(user.getIsActive())) {
+            throw new UnauthorizedException("User account is deactivated");
+        }
+
+        user = userRepository.save(user);
+        TokenPair tokenPair = issueTokens(user.getEmail());
         return buildAuthResponse(user, tokenPair);
     }
 
