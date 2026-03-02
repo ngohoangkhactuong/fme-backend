@@ -11,6 +11,8 @@ public interface DutyReportService {
 
     DutyReportDTO createForStudent(DutyReportRequest request, String studentEmail);
 
+    DutyReportDTO getByIdForStudent(Long id, String studentEmail);
+
     DutyReportDTO getById(Long id);
 
     List<DutyReportDTO> getAll();

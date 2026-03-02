@@ -9,11 +9,14 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DutyReportRepository extends JpaRepository<DutyReport, Long> {
     
     List<DutyReport> findByStudentEmailOrderBySubmittedAtDesc(String studentEmail);
+
+        Optional<DutyReport> findByIdAndStudentEmail(Long id, String studentEmail);
     
     List<DutyReport> findByScheduleIdOrderBySubmittedAtDesc(Long scheduleId);
     

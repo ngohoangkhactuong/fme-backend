@@ -59,6 +59,14 @@ public class DutyReportServiceImpl implements DutyReportService {
 
     @Override
     @Transactional(readOnly = true)
+    public DutyReportDTO getByIdForStudent(Long id, String studentEmail) {
+        DutyReport dutyReport = dutyReportRepository.findByIdAndStudentEmail(id, studentEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("DutyReport", "id", id));
+        return dutyReportMapper.toDTO(dutyReport);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<DutyReportDTO> getAll() {
         List<DutyReport> reports = dutyReportRepository.findAll();
         return dutyReportMapper.toDTOList(reports);

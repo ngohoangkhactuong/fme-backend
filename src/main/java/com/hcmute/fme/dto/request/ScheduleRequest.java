@@ -22,7 +22,6 @@ public class ScheduleRequest {
     @NotBlank(message = "Shift is required")
     private String shift;
 
-    @NotBlank(message = "Student name is required")
     private String studentName;
 
     @NotBlank(message = "Student email is required")

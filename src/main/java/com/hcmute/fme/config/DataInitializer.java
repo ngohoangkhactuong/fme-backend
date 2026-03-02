@@ -70,6 +70,38 @@ public class DataInitializer {
                 log.info("Created {} default users", 2);
             }
 
+            List<User> extraStudents = List.of(
+                    User.builder()
+                            .name("Tran Thi B")
+                            .email("20190002@student.hcmute.edu.vn")
+                            .password(passwordEncoder.encode("student123"))
+                            .studentId("20190002")
+                            .role(User.Role.USER)
+                            .isActive(true)
+                            .build(),
+                    User.builder()
+                            .name("Le Van C")
+                            .email("20190003@student.hcmute.edu.vn")
+                            .password(passwordEncoder.encode("student123"))
+                            .studentId("20190003")
+                            .role(User.Role.USER)
+                            .isActive(true)
+                            .build(),
+                    User.builder()
+                            .name("Pham Thi D")
+                            .email("20190004@student.hcmute.edu.vn")
+                            .password(passwordEncoder.encode("student123"))
+                            .studentId("20190004")
+                            .role(User.Role.USER)
+                            .isActive(true)
+                            .build()
+            );
+
+            extraStudents.stream()
+                    .filter(u -> !userRepository.existsByEmail(u.getEmail())
+                            && !userRepository.existsByStudentId(u.getStudentId()))
+                    .forEach(userRepository::save);
+
             // Initialize banners if empty
             if (bannerRepository.count() == 0) {
                 log.info("Initializing default banners...");

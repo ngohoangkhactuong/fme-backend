@@ -66,6 +66,15 @@ public class DutyReportController {
         return ResponseEntity.ok(ApiResponse.success(reports));
     }
 
+    @GetMapping("/me/{id}")
+    @Operation(summary = "Get report detail for current student")
+    public ResponseEntity<ApiResponse<DutyReportDTO>> getMyReportById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        DutyReportDTO report = dutyReportService.getByIdForStudent(id, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(report));
+    }
+
     @GetMapping("/schedule/{scheduleId}")
     @Operation(summary = "Get reports by schedule ID")
     public ResponseEntity<ApiResponse<List<DutyReportDTO>>> getByScheduleId(@PathVariable Long scheduleId) {

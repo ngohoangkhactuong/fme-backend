@@ -58,8 +58,9 @@ public class SecurityConfig {
 
                         // Authenticated read endpoints
                         .requestMatchers(HttpMethod.GET, "/schedules/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/reports/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/reports/me/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/reports").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/schedules/*/confirm").authenticated()
                         
                         // Admin only endpoints
                         .requestMatchers(HttpMethod.POST, "/banners/**").hasRole("ADMIN")
