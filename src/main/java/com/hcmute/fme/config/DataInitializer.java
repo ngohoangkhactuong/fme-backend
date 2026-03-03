@@ -183,21 +183,21 @@ public class DataInitializer {
                                 .shift("Sáng (7:30 - 11:30)")
                                 .studentName("Nguyễn Văn A")
                                 .studentEmail("20190001@student.hcmute.edu.vn")
-                                .isConfirmed(false)
+                                .status(Schedule.ScheduleStatus.TODO)
                                 .build(),
                         Schedule.builder()
                                 .date(today.plusDays(1))
                                 .shift("Chiều (13:30 - 17:30)")
                                 .studentName("Trần Thị B")
                                 .studentEmail("20190002@student.hcmute.edu.vn")
-                                .isConfirmed(false)
+                                .status(Schedule.ScheduleStatus.TODO)
                                 .build(),
                         Schedule.builder()
                                 .date(today.plusDays(3))
                                 .shift("Tối (17:30 - 21:30)")
                                 .studentName("Lê Văn C")
                                 .studentEmail("20190003@student.hcmute.edu.vn")
-                                .isConfirmed(false)
+                                .status(Schedule.ScheduleStatus.TODO)
                                 .build()
                 );
 

@@ -89,13 +89,18 @@ public class ScheduleController {
         return ResponseEntity.ok(ApiResponse.success("Schedule updated successfully", schedule));
     }
 
-    @PutMapping("/{id}/confirm")
-    @Operation(summary = "Confirm schedule (Admin only)")
-    public ResponseEntity<ApiResponse<ScheduleDTO>> confirm(
+    @PutMapping("/{id}/status")
+    @Operation(summary = "Update schedule status (Student only)")
+    public ResponseEntity<ApiResponse<ScheduleDTO>> updateStatus(
             @PathVariable Long id,
+            @RequestParam String status,
             @AuthenticationPrincipal UserDetails userDetails) {
-        ScheduleDTO schedule = scheduleService.confirm(id, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success("Schedule confirmed successfully", schedule));
+        ScheduleDTO schedule = scheduleService.updateStatusForStudent(
+                id,
+                userDetails.getUsername(),
+                status
+        );
+        return ResponseEntity.ok(ApiResponse.success("Schedule status updated successfully", schedule));
     }
 
     @DeleteMapping("/{id}")

@@ -49,7 +49,7 @@ class ScheduleServiceImplTest {
                 .shift("MORNING")
                 .studentName("Student")
                 .studentEmail("20190001@student.hcmute.edu.vn")
-                .isConfirmed(false)
+            .status(Schedule.ScheduleStatus.TODO)
                 .build();
     }
 
@@ -71,7 +71,7 @@ class ScheduleServiceImplTest {
 
         ArgumentCaptor<Schedule> captor = ArgumentCaptor.forClass(Schedule.class);
         verify(scheduleRepository).save(captor.capture());
-        assertFalse(Boolean.TRUE.equals(captor.getValue().getIsConfirmed()));
+        assertEquals(Schedule.ScheduleStatus.TODO, captor.getValue().getStatus());
         assertEquals("Student", request.getStudentName());
     }
 
@@ -108,8 +108,8 @@ class ScheduleServiceImplTest {
     }
 
     @Test
-    void confirm_allowsOwner() {
-        schedule.setIsConfirmed(false);
+    void updateStatus_allowsOwner() {
+        schedule.setStatus(Schedule.ScheduleStatus.TODO);
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(schedule));
         when(userRepository.findByEmail(schedule.getStudentEmail())).thenReturn(Optional.of(User.builder()
                 .email(schedule.getStudentEmail())
@@ -118,29 +118,26 @@ class ScheduleServiceImplTest {
         when(scheduleRepository.save(any(Schedule.class))).thenReturn(schedule);
         when(scheduleMapper.toDTO(schedule)).thenReturn(new ScheduleDTO());
 
-        scheduleService.confirm(1L, schedule.getStudentEmail());
+        scheduleService.updateStatusForStudent(1L, schedule.getStudentEmail(), "IN_PROGRESS");
 
-        assertTrue(Boolean.TRUE.equals(schedule.getIsConfirmed()));
+        assertEquals(Schedule.ScheduleStatus.IN_PROGRESS, schedule.getStatus());
     }
 
     @Test
-    void confirm_allowsAdmin() {
+    void updateStatus_rejectsAdmin() {
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(schedule));
         when(userRepository.findByEmail("admin@student.hcmute.edu.vn"))
                 .thenReturn(Optional.of(User.builder()
                         .email("admin@student.hcmute.edu.vn")
                         .role(User.Role.ADMIN)
                         .build()));
-        when(scheduleRepository.save(any(Schedule.class))).thenReturn(schedule);
-        when(scheduleMapper.toDTO(schedule)).thenReturn(new ScheduleDTO());
 
-        scheduleService.confirm(1L, "admin@student.hcmute.edu.vn");
-
-        assertTrue(Boolean.TRUE.equals(schedule.getIsConfirmed()));
+        assertThrows(UnauthorizedException.class, () ->
+                scheduleService.updateStatusForStudent(1L, "admin@student.hcmute.edu.vn", "IN_PROGRESS"));
     }
 
     @Test
-    void confirm_rejectsNonOwner() {
+    void updateStatus_rejectsNonOwner() {
         when(scheduleRepository.findById(1L)).thenReturn(Optional.of(schedule));
         when(userRepository.findByEmail("other@student.hcmute.edu.vn"))
                 .thenReturn(Optional.of(User.builder()
@@ -149,7 +146,7 @@ class ScheduleServiceImplTest {
                         .build()));
 
         assertThrows(UnauthorizedException.class, () ->
-                scheduleService.confirm(1L, "other@student.hcmute.edu.vn"));
+                scheduleService.updateStatusForStudent(1L, "other@student.hcmute.edu.vn", "IN_PROGRESS"));
     }
 
     @Test

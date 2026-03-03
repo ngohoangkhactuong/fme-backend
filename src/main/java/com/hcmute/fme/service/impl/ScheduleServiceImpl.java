@@ -5,6 +5,7 @@ import com.hcmute.fme.dto.response.ScheduleDTO;
 import com.hcmute.fme.entity.Schedule;
 import com.hcmute.fme.exception.ResourceNotFoundException;
 import com.hcmute.fme.exception.UnauthorizedException;
+import com.hcmute.fme.exception.ApiException;
 import com.hcmute.fme.mapper.ScheduleMapper;
 import com.hcmute.fme.entity.User;
 import com.hcmute.fme.repository.ScheduleRepository;
@@ -13,9 +14,9 @@ import com.hcmute.fme.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -33,7 +34,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         request.setStudentName(studentName);
         Schedule schedule = scheduleMapper.toEntity(request);
         attachUserIfExists(schedule, request.getStudentEmail());
-        schedule.setIsConfirmed(false);
+        schedule.setStatus(Schedule.ScheduleStatus.TODO);
         schedule = scheduleRepository.save(schedule);
         return scheduleMapper.toDTO(schedule);
     }
@@ -95,28 +96,40 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
-    public ScheduleDTO confirm(Long id, String confirmedBy) {
+    public ScheduleDTO updateStatusForStudent(Long id, String studentEmail, String status) {
         Schedule schedule = scheduleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Schedule", "id", id));
 
         User user = userRepository
-                .findByEmail(confirmedBy)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", confirmedBy));
-        boolean isAdmin = user.getRole() == User.Role.ADMIN;
-        boolean isOwner = confirmedBy != null && confirmedBy.equalsIgnoreCase(schedule.getStudentEmail());
-        if (!isAdmin && !isOwner) {
-            throw new UnauthorizedException("You can only confirm your own schedule");
+                .findByEmail(studentEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", studentEmail));
+        boolean isStudent = user.getRole() == User.Role.USER;
+        boolean isOwner = studentEmail != null && studentEmail.equalsIgnoreCase(schedule.getStudentEmail());
+        if (!isStudent || !isOwner) {
+            throw new UnauthorizedException("You can only update your own schedule status");
         }
 
-        if (Boolean.TRUE.equals(schedule.getIsConfirmed())) {
-            schedule.setIsConfirmed(false);
-            schedule.setConfirmedBy(null);
-            schedule.setConfirmedAt(null);
-        } else {
-            schedule.setIsConfirmed(true);
-            schedule.setConfirmedBy(confirmedBy);
-            schedule.setConfirmedAt(LocalDateTime.now());
+        Schedule.ScheduleStatus current = schedule.getStatus();
+        Schedule.ScheduleStatus next;
+        try {
+            next = Schedule.ScheduleStatus.valueOf(status);
+        } catch (IllegalArgumentException ex) {
+            throw new ApiException("Invalid status", HttpStatus.BAD_REQUEST, "INVALID_STATUS");
         }
+
+        if (current == Schedule.ScheduleStatus.DONE) {
+            throw new ApiException("Schedule is already done", HttpStatus.BAD_REQUEST, "STATUS_LOCKED");
+        }
+
+        if (current == next) {
+            return scheduleMapper.toDTO(schedule);
+        }
+
+        if (!isNextStatus(current, next)) {
+            throw new ApiException("Invalid status transition", HttpStatus.BAD_REQUEST, "INVALID_TRANSITION");
+        }
+
+        schedule.setStatus(next);
         schedule = scheduleRepository.save(schedule);
         return scheduleMapper.toDTO(schedule);
     }
@@ -152,5 +165,10 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private boolean isNextStatus(Schedule.ScheduleStatus current, Schedule.ScheduleStatus next) {
+        return (current == Schedule.ScheduleStatus.TODO && next == Schedule.ScheduleStatus.IN_PROGRESS)
+                || (current == Schedule.ScheduleStatus.IN_PROGRESS && next == Schedule.ScheduleStatus.DONE);
     }
 }

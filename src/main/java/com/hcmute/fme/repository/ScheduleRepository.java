@@ -18,7 +18,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     
     List<Schedule> findByStudentEmailOrderByDateDesc(String studentEmail);
     
-    @Query("SELECT s FROM Schedule s WHERE s.date >= :date AND s.isConfirmed = false ORDER BY s.date ASC")
+    @Query("SELECT s FROM Schedule s WHERE s.date >= :date AND s.status <> 'DONE' ORDER BY s.date ASC")
     List<Schedule> findUpcomingUnconfirmed(@Param("date") LocalDate date);
     
     @Query("SELECT s FROM Schedule s WHERE s.studentEmail = :email AND s.date = :date AND s.shift = :shift")

@@ -40,15 +40,9 @@ public class Schedule {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @Column(name = "is_confirmed")
+    @Enumerated(EnumType.STRING)
     @Builder.Default
-    private Boolean isConfirmed = false;
-
-    @Column(name = "confirmed_by")
-    private String confirmedBy;
-
-    @Column(name = "confirmed_at")
-    private LocalDateTime confirmedAt;
+    private ScheduleStatus status = ScheduleStatus.TODO;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -61,4 +55,8 @@ public class Schedule {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public enum ScheduleStatus {
+        TODO, IN_PROGRESS, DONE
+    }
 }

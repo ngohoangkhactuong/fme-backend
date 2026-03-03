@@ -60,10 +60,11 @@ class ScheduleControllerTest {
 
     @Test
     @WithMockUser(username = "20190001@student.hcmute.edu.vn")
-    void confirm_returnsOk() throws Exception {
-        when(scheduleService.confirm(eq(1L), any())).thenReturn(new ScheduleDTO());
+    void updateStatus_returnsOk() throws Exception {
+        when(scheduleService.updateStatusForStudent(eq(1L), any(), any())).thenReturn(new ScheduleDTO());
 
-        mockMvc.perform(put("/schedules/1/confirm"))
+        mockMvc.perform(put("/schedules/1/status")
+                .param("status", "IN_PROGRESS"))
                 .andExpect(status().isOk());
     }
 }

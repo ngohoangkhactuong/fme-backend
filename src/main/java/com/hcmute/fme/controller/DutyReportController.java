@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -60,21 +61,27 @@ public class DutyReportController {
     @Operation(summary = "Get all reports")
     public ResponseEntity<ApiResponse<List<DutyReportDTO>>> getAll() {
         List<DutyReportDTO> reports = dutyReportService.getAll();
-        return ResponseEntity.ok(ApiResponse.success(reports));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(ApiResponse.success(reports));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get report by ID")
     public ResponseEntity<ApiResponse<DutyReportDTO>> getById(@PathVariable Long id) {
         DutyReportDTO report = dutyReportService.getById(id);
-        return ResponseEntity.ok(ApiResponse.success(report));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(ApiResponse.success(report));
     }
 
     @GetMapping("/student/{email}")
     @Operation(summary = "Get reports by student email")
     public ResponseEntity<ApiResponse<List<DutyReportDTO>>> getByStudentEmail(@PathVariable String email) {
         List<DutyReportDTO> reports = dutyReportService.getByStudentEmail(email);
-        return ResponseEntity.ok(ApiResponse.success(reports));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(ApiResponse.success(reports));
     }
 
     @GetMapping("/me")
@@ -82,7 +89,9 @@ public class DutyReportController {
     public ResponseEntity<ApiResponse<List<DutyReportDTO>>> getMyReports(
             @AuthenticationPrincipal UserDetails userDetails) {
         List<DutyReportDTO> reports = dutyReportService.getByStudentEmail(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(reports));
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .body(ApiResponse.success(reports));
     }
 
     @GetMapping("/me/{id}")
@@ -91,14 +100,18 @@ public class DutyReportController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
         DutyReportDTO report = dutyReportService.getByIdForStudent(id, userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(report));
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .body(ApiResponse.success(report));
     }
 
     @GetMapping("/schedule/{scheduleId}")
     @Operation(summary = "Get reports by schedule ID")
     public ResponseEntity<ApiResponse<List<DutyReportDTO>>> getByScheduleId(@PathVariable Long scheduleId) {
         List<DutyReportDTO> reports = dutyReportService.getByScheduleId(scheduleId);
-        return ResponseEntity.ok(ApiResponse.success(reports));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(ApiResponse.success(reports));
     }
 
     @GetMapping("/filter")
@@ -108,7 +121,9 @@ public class DutyReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
         List<DutyReportDTO> reports = dutyReportService.getByFilters(studentEmail, fromDate, toDate);
-        return ResponseEntity.ok(ApiResponse.success(reports));
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .body(ApiResponse.success(reports));
     }
 
     @PutMapping("/{id}")

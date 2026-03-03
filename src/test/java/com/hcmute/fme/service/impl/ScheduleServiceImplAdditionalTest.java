@@ -48,10 +48,11 @@ class ScheduleServiceImplAdditionalTest {
     }
 
     @Test
-    void confirm_throwsWhenMissingSchedule() {
+    void updateStatus_throwsWhenMissingSchedule() {
         when(scheduleRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> scheduleService.confirm(1L, "admin"));
+        assertThrows(ResourceNotFoundException.class, () ->
+            scheduleService.updateStatusForStudent(1L, "admin", "IN_PROGRESS"));
     }
 
     @Test

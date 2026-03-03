@@ -20,9 +20,7 @@ public class ScheduleDTO {
     private String studentName;
     private String studentEmail;
     private String notes;
-    private Boolean isConfirmed;
-    private String confirmedBy;
-    private LocalDateTime confirmedAt;
+    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -22,7 +22,7 @@ public interface ScheduleService {
 
     ScheduleDTO update(Long id, ScheduleRequest request);
 
-    ScheduleDTO confirm(Long id, String confirmedBy);
+    ScheduleDTO updateStatusForStudent(Long id, String studentEmail, String status);
 
     void delete(Long id);
 }
